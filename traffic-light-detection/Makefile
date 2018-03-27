@@ -1,7 +1,7 @@
 
 RESEARCH=~/tensorflow/models/research
-OBJ=~/tensorflow/models/object_detection/
-UTILITIES=~/tensorflow/models/research/utilities
+OBJ=${RESEARCH}/object_detection/
+UTILITIES=${RESEARCH}/utilities
 TLD-TAPI=TrafficLight_Detection-TensorFlowAPI
 
 deps:
@@ -12,7 +12,7 @@ pip:
 
 dataset:
 	sh gdrive.sh 0B-Eiyn-CUQtxdUZWMkFfQzdObUE ${RESEARCH}/data.zip && \
-	cd ${RESEARCH} && unzip data.zip
+	cd ${RESEARCH} && unzip -o data.zip
 
 models:
 	cd ~/tensorflow && \
@@ -25,8 +25,8 @@ cocoapi:
 	cp -r pycocotools ${RESEARCH}
 
 utils:
-	cd ${RESEARCH} && mkdir utilities && \
-	cd ${OBJ} && cp -r utils ${UTILITIES}
+	cd ${RESEARCH} && mkdir -p utilities && \
+	cd ${OBJ} && cp -r utils/* ${UTILITIES}
 
 protobuf:
 	cd  ${RESEARCH} && \
@@ -47,4 +47,4 @@ data-conversion:
 	python data_conversion_udacity_sim.py --output_path sim_data.record && \
 	python data_conversion_udacity_real.py --output_path real_data.record
 
-setup: deps pip models cocoapi protobuf pythonpath pre-trained-model dataset data-conversion 
+setup: deps pip models cocoapi protobuf pythonpath pre-trained-model dataset utils data-conversion 
