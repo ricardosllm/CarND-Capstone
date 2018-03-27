@@ -37,7 +37,8 @@ pre-trained-model:
 	cp -r ${TLD-TAPI}/* .
 
 data-conversion:
-	python ${RESEARCH}/${TLD-TAPI}/data_conversion_udacity_sim.py --output_path ${RESEARCH}/${TLD-TAPI}/sim_data.record && \
-	python ${RESEARCH}/${TLD-TAPI}/data_conversion_udacity_real.py --output_path ${RESEARCH}/${TLD-TAPI}/real_data.record
+	cd ${RESEARCH} && \
+	python data_conversion_udacity_sim.py --output_path sim_data.record && \
+	python data_conversion_udacity_real.py --output_path real_data.record
 
 setup: deps pip models cocoapi protobuf pythonpath pre-trained-model dataset data-conversion 
