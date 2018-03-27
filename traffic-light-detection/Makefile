@@ -33,7 +33,7 @@ protobuf:
 	protoc object_detection/protos/*.proto --python_out=.
 
 pythonpath:
-	export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+	echo "export PYTHONPATH=$$PYTHONPATH:${RESEARCH}:${RESEARCH}/slim" >> ~/.bashrc
 
 pre-trained-model:
 	cd ${RESEARCH} && \
@@ -47,4 +47,22 @@ data-conversion:
 	python data_conversion_udacity_sim.py --output_path sim_data.record && \
 	python data_conversion_udacity_real.py --output_path real_data.record
 
-setup: deps pip models cocoapi protobuf pythonpath pre-trained-model dataset utils data-conversion 
+test-installation:
+	cd ${RESEARCH} && \
+	python object_detection/builders/model_builder_test.py
+
+setup: deps pip models cocoapi protobuf pythonpath pre-trained-model dataset utils data-conversion test-installation
+
+sim-train:
+	cd ${RESEARCH} && \
+	python object_detection/train.py \
+	--pipeline_config_path=config/faster_rcnn-traffic-udacity_sim.config \
+	--train_dir=data/sim_training_data/sim_data_capture
+
+sim-export:
+	cd ${RESEARCH} && \
+	python object_detection/export_inference_graph.py \
+	--pipeline_config_path=config/faster_rcnn-traffic-udacity_sim.config \
+	--trained_checkpoint_prefix=data/sim_training_data/sim_data_capture/model.ckpt-5000 \
+	--output_directory=frozen_sim/
+
