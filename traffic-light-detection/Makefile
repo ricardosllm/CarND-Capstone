@@ -1,10 +1,16 @@
 
+RESEARCH=~/tensorflow/models/research
+TLD-TAPI=TrafficLight_Detection-TensorFlowAPI
 
 deps:
 	sudo apt-get install protobuf-compiler python-pil python-lxml python-tk
 
 pip:
 	pip install -r requirements.txt
+
+dataset:
+	sh gdrive.sh 0B-Eiyn-CUQtxdUZWMkFfQzdObUE ${RESEARCH}/data.zip && \
+	cd ${RESEARCH} && unzip data.zip
 
 models:
 	cd ~/tensorflow && \
@@ -14,13 +20,24 @@ cocoapi:
 	git clone https://github.com/cocodataset/cocoapi.git && \
 	cd cocoapi/PythonAPI && \
 	make && \
-	cp -r pycocotools ~/tensorflow/models/research/
+	cp -r pycocotools ${RESEARCH}
 
 protobuf:
-	cd ~/tensorflow/models/research && \
+	cd  ${RESEARCH} && \
 	protoc object_detection/protos/*.proto --python_out=.
 
 pythonpath:
 	export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 
-setup: deps pip models cocoapi protobuf pythonpath
+pre-trained-model:
+	cd ${RESEARCH} && \
+	curl http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_coco_2018_01_28.tar.gz -o faster_rcnn_resnet101_coco_2018_01_28.tar.gz && \
+	tar -xvzf faster_rcnn_resnet101_coco_2018_01_28.tar.gz && \
+	git clone https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI.git ${TLD-TAPI} || (cd ${TLD-TAPI}; git pull) && \
+	cp -r ${TLD-TAPI}/* .
+
+data-conversion:
+	python ${RESEARCH}/${TLD-TAPI}/data_conversion_udacity_sim.py --output_path ${RESEARCH}/${TLD-TAPI}/sim_data.record && \
+	python ${RESEARCH}/${TLD-TAPI}/data_conversion_udacity_real.py --output_path ${RESEARCH}/${TLD-TAPI}/real_data.record
+
+setup: deps pip models cocoapi protobuf pythonpath pre-trained-model dataset data-conversion 
