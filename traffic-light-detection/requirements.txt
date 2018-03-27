@@ -1,0 +1,6 @@
+tensorflow-gpu
+Cython
+pillow
+lxml
+jupyter
+matplotlib
