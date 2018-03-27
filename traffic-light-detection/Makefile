@@ -1,5 +1,7 @@
 
 RESEARCH=~/tensorflow/models/research
+OBJ=~/tensorflow/models/object_detection/
+UTILITIES=~/tensorflow/models/research/utilities
 TLD-TAPI=TrafficLight_Detection-TensorFlowAPI
 
 deps:
@@ -21,6 +23,10 @@ cocoapi:
 	cd cocoapi/PythonAPI && \
 	make && \
 	cp -r pycocotools ${RESEARCH}
+
+utils:
+	cd ${RESEARCH} && mkdir utilities && \
+	cd ${OBJ} && cp -r utils ${UTILITIES}
 
 protobuf:
 	cd  ${RESEARCH} && \
