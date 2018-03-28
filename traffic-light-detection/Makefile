@@ -3,6 +3,8 @@ RESEARCH=~/tensorflow/models/research
 OBJ=${RESEARCH}/object_detection/
 UTILITIES=${RESEARCH}/utilities
 TLD-TAPI=TrafficLight_Detection-TensorFlowAPI
+TF_MODELS_140=1464a721fef7da67e87b0f1f1a710b1e904e8764
+OBJECT_DETECTION_MODEL=faster_rcnn_resnet101_coco_11_06_2017
 
 deps:
 	sudo apt-get install protobuf-compiler python-pil python-lxml python-tk
@@ -16,7 +18,8 @@ dataset:
 
 models:
 	cd ~/tensorflow && \
-	git clone https://github.com/tensorflow/models.git || (cd models; git pull); \
+	git clone https://github.com/tensorflow/models.git || (echo "models already downloaded") && \
+	cd ~/tensorflow/models && git checkout ${TF_MODELS_140}
 
 cocoapi: 
 	git clone https://github.com/cocodataset/cocoapi.git && \
@@ -37,8 +40,8 @@ pythonpath:
 
 pre-trained-model:
 	cd ${RESEARCH} && \
-	curl http://download.tensorflow.org/models/object_detection/faster_rcnn_resnet101_coco_2018_01_28.tar.gz -o faster_rcnn_resnet101_coco_2018_01_28.tar.gz && \
-	tar -xvzf faster_rcnn_resnet101_coco_2018_01_28.tar.gz && \
+	curl http://download.tensorflow.org/models/object_detection/${OBJECT_DETECTION_MODEL}.tar.gz -o ${OBJECT_DETECTION_MODEL}.tar.gz && \
+	tar -xvzf ${OBJECT_DETECTION_MODEL}.tar.gz && \
 	git clone https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI.git ${TLD-TAPI} || (cd ${TLD-TAPI}; git pull) && \
 	cp -r ${TLD-TAPI}/* .
 
