@@ -42,7 +42,7 @@ pre-trained-model:
 	cd ${RESEARCH} && \
 	curl http://download.tensorflow.org/models/object_detection/${OBJECT_DETECTION_MODEL}.tar.gz -o ${OBJECT_DETECTION_MODEL}.tar.gz && \
 	tar -xvzf ${OBJECT_DETECTION_MODEL}.tar.gz && \
-	git clone https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI.git ${TLD-TAPI} || (cd ${TLD-TAPI}; git pull) && \
+	git clone https://github.com/ricardosllm/TrafficLight_Detection-TensorFlowAPI.git ${TLD-TAPI} || (cd ${TLD-TAPI}; git pull) && \
 	cp -r ${TLD-TAPI}/* .
 
 data-conversion:
@@ -56,16 +56,31 @@ test-installation:
 
 setup: deps pip models cocoapi protobuf pythonpath pre-trained-model dataset utils data-conversion test-installation
 
-sim-train:
+define train
 	cd ${RESEARCH} && \
-	python object_detection/train.py \
-	--pipeline_config_path=config/faster_rcnn-traffic-udacity_sim.config \
-	--train_dir=data/sim_training_data/sim_data_capture
+	time python object_detection/train.py \
+	--pipeline_config_path=config/faster_rcnn-traffic-udacity_$(1).config \
+	--train_dir=data/$(1)_training_data/$(1)_data_capture
+endef
 
-sim-export:
+define save_for_inference
 	cd ${RESEARCH} && \
+	rm -r frozen_$(1)/saved_model && \
 	python object_detection/export_inference_graph.py \
-	--pipeline_config_path=config/faster_rcnn-traffic-udacity_sim.config \
-	--trained_checkpoint_prefix=data/sim_training_data/sim_data_capture/model.ckpt-5000 \
-	--output_directory=frozen_sim/
+	--pipeline_config_path=config/faster_rcnn-traffic-udacity_$(1).config \
+	--trained_checkpoint_prefix=data/$(1)_training_data/$(1)_data_capture/model.ckpt-10000 \
+	--output_directory=frozen_$(1)/
+endef
+
+sim-train:
+	$(call train,sim)
+
+sim-inference:
+	$(call save_for_inference,sim)
+
+real-train:
+	$(call train,real)
+
+real-inference:
+	$(call save_for_inference,real)
 
