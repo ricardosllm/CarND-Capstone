@@ -9,12 +9,13 @@ To detect traffic lights we've decided to use the [TensorFlow Object Detection A
 3. Run `sudo apt-get update`
 4. Run `git clone https://github.com/ricardosllm/CarND-Capstone.git && cd CarND-Capstone`
 5. Run `git checkout deep-traffic-light && cd traffic-light-detection`
-6. Run `make setup`
-7. Run `source ~/.bashrc`
-8. Run `cd ~/tensorflow/models/research`
-9. Run one of the following based your model choice and whether you want to train sim or real images
+6. NOTE: If you are running SSD Inception V2 Coco, you must edit the Makefile. `vim Makefile` and change line 7 to `OBJECT_DETECTION_MODEL=ssd_inception_v2_coco_2017_11_17`
+7. Run `make setup`
+8. Run `source ~/.bashrc`
+9. Run `cd ~/tensorflow/models/research`
+10. Run one of the following based your model choice and whether you want to train sim or real images
 
-## Using Inception SSD v2
+## Using SSD Inception v2 Coco
 NOTE: To use Inception SSD v2, you must update the path to the model on line 152. Sim [here](https://github.com/ricardosllm/TrafficLight_Detection-TensorFlowAPI/blob/master/config/ssd_inception-traffic-udacity_sim.config) and Real [here](https://github.com/ricardosllm/TrafficLight_Detection-TensorFlowAPI/blob/master/config/ssd_inception-traffic_udacity_real.config)
 
 Change it to: `ssd_inception_v2_coco_2017_11_17`
