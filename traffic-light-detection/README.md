@@ -1,6 +1,6 @@
 # Traffic Light Detection
 
-To detect traffic lights we've decided to use [TensorFlow Object Detection API](https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI) 
+To detect traffic lights we've decided to use the [TensorFlow Object Detection API](https://github.com/coldKnight/TrafficLight_Detection-TensorFlowAPI) 
 
 ## Setup
 
@@ -12,7 +12,7 @@ To detect traffic lights we've decided to use [TensorFlow Object Detection API](
 6. Run `make setup`
 7. Run `source ~/.bashrc`
 8. Run `cd ~/tensorflow/models/research`
-9. Run one of the following based on the model you chose and sim/real images
+9. Run one of the following based your model choice and whether you want to train sim or real images
 
 ## Using Inception SSD v2
 NOTE: To use Inception SSD v2, you must update the path to the model on line 152. Sim [here](https://github.com/ricardosllm/TrafficLight_Detection-TensorFlowAPI/blob/master/config/ssd_inception-traffic-udacity_sim.config) and Real [here](https://github.com/ricardosllm/TrafficLight_Detection-TensorFlowAPI/blob/master/config/ssd_inception-traffic_udacity_real.config)
@@ -62,7 +62,3 @@ Change it to: `ssd_inception_v2_coco_2017_11_17`
 #### Saving for Inference
 
 `python object_detection/export_inference_graph.py --pipeline_config_path=config/faster_rcnn-traffic_udacity_real.config --trained_checkpoint_prefix=data/real_training_data/model.ckpt-10000 --output_directory=frozen_real/`
-
-
-
-
