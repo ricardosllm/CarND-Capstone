@@ -16,9 +16,11 @@ To detect traffic lights we've decided to use the [TensorFlow Object Detection A
 10. Run one of the following based your model choice and whether you want to train sim or real images
 
 ## Using SSD Inception v2 Coco
-NOTE: To use Inception SSD v2, you must update the path to the model on line 152. Sim [here](https://github.com/ricardosllm/TrafficLight_Detection-TensorFlowAPI/blob/master/config/ssd_inception-traffic-udacity_sim.config) and Real [here](https://github.com/ricardosllm/TrafficLight_Detection-TensorFlowAPI/blob/master/config/ssd_inception-traffic_udacity_real.config)
+NOTE: To use Inception SSD v2, you must update the path to the model. 
 
-Change it to: `ssd_inception_v2_coco_2017_11_17`
+1. `cd ~/tensorflow/model/research/TrafficLight_Detection-TensorFlowAPI/config`
+2. For training Sim images: `vim ssd_inception-traffic-udacity_sim.config` and change line 152 to `fine_tune_checkpoint: "ssd_inception_v2_coco_2017_11_17/model.ckpt"`
+3. For training Real images: `vim ssd_inception-traffic_udacity_real.config` and change line 152 to `fine_tune_checkpoint: "ssd_inception_v2_coco_2017_11_17/model.ckpt"`
 
 ### For Simulator Data
 
