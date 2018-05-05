@@ -19,7 +19,7 @@ class TLClassifier(object):
         #TODO load classifier
         curr_dir = os.path.dirname(os.path.realpath(__file__))
 
-        path_to_ckpt = curr_dir + '/models/' + REAL_MODEL
+        path_to_ckpt = curr_dir + '/models/' + SIMULATION_RCNN_MODEL
 
         path_to_labels = curr_dir + '/label_map.pbtxt'
         num_classes = 4
