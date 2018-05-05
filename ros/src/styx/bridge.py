@@ -1,6 +1,4 @@
-
 import rospy
-
 import tf
 from geometry_msgs.msg import PoseStamped, Quaternion, TwistStamped
 from dbw_mkz_msgs.msg import SteeringReport, ThrottleCmd, BrakeCmd, SteeringCmd
@@ -11,13 +9,11 @@ from sensor_msgs.msg import Image
 import sensor_msgs.point_cloud2 as pcl2
 from std_msgs.msg import Header
 from cv_bridge import CvBridge, CvBridgeError
-
 from styx_msgs.msg import TrafficLight, TrafficLightArray, Lane
 import numpy as np
 from PIL import Image as PIL_Image
 from io import BytesIO
 import base64
-
 import math
 
 TYPE = {
@@ -34,7 +30,6 @@ TYPE = {
     'path_draw': Lane,
     'image':Image
 }
-
 
 class Bridge(object):
     def __init__(self, conf, server):
