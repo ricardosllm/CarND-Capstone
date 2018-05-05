@@ -21,7 +21,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 40 # Number of waypoints we will publish. You can change this number
 
 
 class WaypointUpdater(object):
@@ -37,16 +37,21 @@ class WaypointUpdater(object):
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # TODO: Add other member variables you need below
-
+        self.current_pose = None
+        self.base_waypoints = None
+        self.final_waypoints = None
         rospy.spin()
 
     def pose_cb(self, msg):
         # TODO: Implement
-        pass
+        self.current_pose = msg.pose
+        if self.base_waypoints:
+            self.get_final_waypoints()
+            self.publish_final_waypoints()
 
-    def waypoints_cb(self, waypoints):
+    def waypoints_cb(self, msg):
         # TODO: Implement
-        pass
+        self.base_waypoints = msg.waypoints
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
@@ -69,6 +74,36 @@ class WaypointUpdater(object):
             dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
             wp1 = i
         return dist
+
+    # Added -----------------------------------------------
+    def find_closet_waypoint(self):
+        # current location
+        curr_x, curr_y = self.current_pose.position.x, self.current_pose.position.y
+        # iterate to find closest_idx
+        closest_dist = float("inf")
+        closest_idx = None
+        for i, wp in enumerate(self.base_waypoints):
+            wp_x = wp.pose.pose.position.x
+            wp_y = wp.pose.pose.position.y
+            dist = (wp_x-curr_x)**2 + (wp_y-curr_y)**2
+            if dist<closest_dist:
+                closest_dist = dist
+                closest_idx = i
+        return closest_idx
+
+    def get_final_waypoints(self):
+        # get final waypoints
+        closest_idx = self.find_closet_waypoint()
+        self.final_waypoints = self.base_waypoints[closest_idx:closest_idx+LOOKAHEAD_WPS]
+        for i in range(len(self.final_waypoints)):
+            self.final_waypoints[i].twist.twist.linear.x = 25 * 0.447
+        return
+
+
+    def publish_final_waypoints(self):
+        lane = Lane()
+        lane.waypoints = self.final_waypoints
+        self.final_waypoints_pub.publish(lane)
 
 
 if __name__ == '__main__':
