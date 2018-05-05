@@ -1,4 +1,4 @@
-## The Continuous Driving Team:
+## The Continuous Driving Team
 
 |     Name       |           Email           |
 |----------------|---------------------------|
