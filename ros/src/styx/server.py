@@ -6,8 +6,8 @@ eventlet.monkey_patch(socket=True, select=True, time=True)
 import eventlet.wsgi
 import socketio
 import time
-from flask import Flask, render_template
 
+from flask import Flask, render_template
 from bridge import Bridge
 from conf import conf
 
