@@ -1,68 +1,59 @@
 from styx_msgs.msg import TrafficLight
 
-import numpy as np
-import os
+from utils import label_map_util
+from utils import visualization_utils as vis_util
+
+import cv2
+import rospy
 import sys
+import numpy as np
 import tensorflow as tf
-from collections import defaultdict
-from io import StringIO
-from utilities import label_map_util
-from utilities import visualization_utils as vis_util
-import time
+import os
+
+REAL_MODEL = 'frozen_inference_graph_real.pb'
+SIMULATION_SSD_MODEL = 'frozen_inference_graph_simulation_ssd.pb'
+SIMULATION_RCNN_MODEL = 'frozen_inference_graph_simulation_ssd.pb'
 
 class TLClassifier(object):
     def __init__(self):
         #TODO load classifier
+        curr_dir = os.path.dirname(os.path.realpath(__file__))
 
-        self.current_light = TrafficLight.UNKNOWN
+        path_to_ckpt = curr_dir + '/models/' + SIMULATION_SSD_MODEL
 
-        path = os.path.dirname(os.path.realpath(__file__))
-     
-        self.simulation = True  # Toggle for real (false)
+        path_to_labels = curr_dir + '/label_map.pbtxt'
+        num_classes = 4
 
-        # Path to frozen graphs
-        if self.simulation is True:
-            CKPT = path+'/graphs/Faster-RCNN-Sim/frozen_inference_graph.pb'
-        else:
-            CKPT = path+'/graphs/Faster-RCNN-Real/frozen_inference_graph.pb'
-
-        PATH_TO_LABELS = path+'/graphs/label_map.pbtxt'
-        NUM_CLASSES = 4
-
-        label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
-        categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
-        self.category_index = label_map_util.create_category_index(categories)
-
-        # Need to review this below
-        self.image_np_deep = None
         self.detection_graph = tf.Graph()
 
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-
+        # Spin up frozen TensorFlow model
+        self.detection_graph = tf.Graph()
         with self.detection_graph.as_default():
-            graph_def = tf.GraphDef()
-
-            with tf.gfile.GFile(CKPT, 'rb') as fid:
+            od_graph_def = tf.GraphDef()
+            with tf.gfile.GFile(path_to_ckpt, 'rb') as fid:
                 serialized_graph = fid.read()
-                graph_def.ParseFromString(serialized_graph)
-                tf.import_graph_def(graph_def, name='')
+                od_graph_def.ParseFromString(serialized_graph)
+                tf.import_graph_def(od_graph_def, name='')
 
-            self.sess = tf.Session(graph=self.detection_graph, config=config)
+            self.sess = tf.Session(graph=self.detection_graph)
 
-        # Input and output
         self.image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
-
-        # Bounding boxes
-        self.detection_boxes = self.detection_graph.get_tensor_by_name('detection_boxes:0')
-
-        # Each score represent how level of confidence for each of the objects.
-        # Score is shown on the result image, together with the class label.
-        self.detection_scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
-        self.detection_classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
+        
+        # Each box represents a part of the image where a particular object was detected.
+        self.boxes = self.detection_graph.get_tensor_by_name('detection_boxes:0')
+        
+        # Score represents level of confidence for each object
+        self.scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
+        self.classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
         self.num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
 
-        print("Graph is ready")
+        print("Graph loaded")
+
+        # Load label map
+        label_map = label_map_util.load_labelmap(path_to_labels)
+        categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=num_classes, use_display_name=True)
+
+        self.category_index = label_map_util.create_category_index(categories)
 
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
@@ -75,65 +66,40 @@ class TLClassifier(object):
 
         """
         #TODO implement light color prediction
+        # Set unknown as default
+        current_light = TrafficLight.UNKNOWN
 
-        run = True # Toggle to disable
+        run = True
 
-        if run is True:
+        if run:
+
             image_expanded = np.expand_dims(image, axis=0)
-
+            
             # Detection
             with self.detection_graph.as_default():
                 (boxes, scores, classes, num) = self.sess.run(
-                    [self.detection_boxes, self.detection_scores, 
-                    self.detection_classes, self.num_detections],
-                    feed_dict={self.image_tensor: image_np_expanded})
+                [self.boxes, self.scores,
+                self.classes, self.num_detections],
+                feed_dict={self.image_tensor: image_expanded})
 
-        boxes = np.squeeze(boxes)
-        scores = np.squeeze(scores)
-        classes = np.squeeze(classes).astype(np.int32)
+            boxes = np.squeeze(boxes)
+            scores = np.squeeze(scores)
+            classes = np.squeeze(classes).astype(np.int32)
 
-        # Traffic light distance
+            high_score = scores.argmax()
 
-        min_score_thresh = .50
-        for i in range(boxes.shape[0]):
-            if scores is None or scores[i] > min_score_thresh:
+            if scores[high_score] > 0.5:
+                light_color = self.category_index[classes[high_score]]['name']
+                rospy.logwarn("[Classifier] {}".format(light_color))
                 
-                class_name = self.category_index[classes[i]]['name']
-                # class_id = self.category_index[classes[i]]['id']  # if needed
+                if light_color == 'Green':
+                    current_light = TrafficLight.GREEN
+                elif light_color == 'Red':
+                    current_light = TrafficLight.RED
+                elif light_color == 'Yellow':
+                    current_light = TrafficLight.YELLOW
+            else:
+                rospy.logwarn("[Can't compute!]")
 
-                print('{}'.format(class_name))
 
-                # Traffic lights
-                self.current_light = TrafficLight.UNKNOWN
-
-                if class_name == 'Red':
-                    self.current_light = TrafficLight.RED
-                elif class_name == 'Green':
-                    self.current_light = TrafficLight.GREEN
-                elif class_name == 'Yellow':
-                    self.current_light = TrafficLight.YELLOW
-
-                fx =  1345.200806
-                fy =  1353.838257
-                perceived_width_x = (boxes[i][3] - boxes[i][1]) * 800
-                perceived_width_y = (boxes[i][2] - boxes[i][0]) * 600
-
-                # ymin, xmin, ymax, xmax = box
-                # depth_prime = (width_real * focal) / perceived_width
-                # traffic light is 4 feet long and 1 foot wide?
-                perceived_depth_x = ((1 * fx) / perceived_width_x)
-                perceived_depth_y = ((3 * fy) / perceived_width_y )
-
-                estimated_distance = round((perceived_depth_x + perceived_depth_y) / 2)
-
-        # Visualization of detection results
-        vis_util.visualize_boxes_and_labels_on_image_array(
-            image, boxes, classes, scores,
-            self.category_index,
-            use_normalized_coordinates=True,
-            line_thickness=8)
-        
-    # Visualization of topic output
-    self.image_np_deep = image
-
-    return self.current_light
+        return current_light
